@@ -1,0 +1,9 @@
+[Unit]
+Description=SNAT Reflactor
+
+[Service]
+Type=exec
+ExecStart=/usr/local/bin/snat-reflector
+
+[Install]
+WantedBy=multi-user.target

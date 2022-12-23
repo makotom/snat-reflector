@@ -1,0 +1,10 @@
+{
+  "name": "snat-reflector",
+  "version": "rawhide",
+  "scripts": {
+    "lint": "eslint --fix '**/*.js'"
+  },
+  "dependencies": {
+    "eslint": "^8.30.0"
+  }
+}
