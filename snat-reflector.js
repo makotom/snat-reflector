@@ -23,21 +23,11 @@ class SNATReflector {
 
         readlineInterface.on('line', (entry) => {
             const parsed = this.parseConntrackEntry(entry);
-            const iptNatEntry = `${parsed.event === 'DESTROY' ? '-D' : '-I'} PREROUTING -d ${parsed.mapped.addr}/32 -p udp -m udp --dport ${parsed.mapped.port} -j DNAT --to-destination ${parsed.origin.addr}:${parsed.origin.port}`;
-            const iptForwardEntry = `${parsed.event === 'DESTROY' ? '-D' : '-I'} FORWARD -d ${parsed.origin.addr}/32 -p udp -m udp --dport ${parsed.origin.port} -j ACCEPT`;
+            const iptEntry = this.buildIPTEntry(parsed);
 
             // console.log(parsed);
-            this.ipt_r.stdin.write(
-                [
-                    '*nat',
-                    iptNatEntry,
-                    'COMMIT',
-
-                    '*filter',
-                    iptForwardEntry,
-                    'COMMIT',
-                ].join('\n') + '\n\n'
-            );
+            // console.log(iptEntry);
+            this.ipt_r.stdin.write(iptEntry);
         });
 
         this.conntrack = {
@@ -81,6 +71,34 @@ class SNATReflector {
         });
 
         return ret;
+    }
+
+    buildIPTEntry(event) {
+        const iptDNATRule = this.buildIPTDNATRule(event);
+        const iptForwardRule = this.buildIPTForwardRule(event);
+
+        return [
+            '*nat',
+            iptDNATRule,
+            'COMMIT',
+            '',
+            '*filter',
+            iptForwardRule,
+            'COMMIT',
+            ''
+        ].join('\n');
+    }
+
+    buildIPTDNATRule(event) {
+        return `${this.chooseIPTCommand(event)} PREROUTING -d ${event.mapped.addr}/32 -p udp -m udp --dport ${event.mapped.port} -j DNAT --to-destination ${event.origin.addr}:${event.origin.port}`;
+    }
+
+    buildIPTForwardRule(event) {
+        return `${this.chooseIPTCommand(event)} FORWARD -d ${event.origin.addr}/32 -p udp -m udp --dport ${event.origin.port} -j ACCEPT`;
+    }
+
+    chooseIPTCommand(event) {
+        return event.event === 'DESTROY' ? '-D' : '-I';
     }
 }
 
