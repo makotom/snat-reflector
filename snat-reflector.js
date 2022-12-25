@@ -18,7 +18,7 @@ class SNATReflector {
         const proc = child_process.spawn('conntrack', ['-E', '-e', 'NEW,DESTROY', '-p', 'udp', '-f', 'ipv4', '-n']);
         const readlineInterface = readline.createInterface({
             input: proc.stdout,
-            crlfDelay: Infinity,
+            crlfDelay: Infinity
         });
 
         readlineInterface.on('line', (entry) => {
