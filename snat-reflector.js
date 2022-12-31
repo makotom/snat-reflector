@@ -11,30 +11,26 @@ class SNATReflector {
 
     armIptablesRestore() {
         this.ipt_r = child_process.spawn('iptables-restore', ['--noflush']);
+
         this.ipt_r.on('exit', this.armIptablesRestore.bind(this));
+        this.ipt_r.stdin.on('error', (err) => console.error(err));
     }
 
     armConntrack() {
-        const proc = child_process.spawn('conntrack', ['-E', '-e', 'NEW,DESTROY', '-p', 'udp', '-f', 'ipv4', '-n']);
-        const readlineInterface = readline.createInterface({
-            input: proc.stdout,
+        this.conntrack = {};
+        this.conntrack.proc = child_process.spawn('conntrack', ['-E', '-e', 'NEW,DESTROY', '-p', 'udp', '-f', 'ipv4', '-n']);
+        this.conntrack.readlineInterface = readline.createInterface({
+            input: this.conntrack.proc.stdout,
             crlfDelay: Infinity
         });
 
-        readlineInterface.on('line', (entry) => {
+        this.conntrack.readlineInterface.on('line', (entry) => {
             const parsed = this.parseConntrackEntry(entry);
             const iptEntry = this.buildIPTEntry(parsed);
 
-            // console.log(parsed);
-            // console.log(iptEntry);
             this.ipt_r.stdin.write(iptEntry);
         });
-
-        this.conntrack = {
-            proc,
-            readlineInterface
-        };
-        proc.on('exit', this.armConntrack.bind(this));
+        this.conntrack.proc.on('exit', this.armConntrack.bind(this));
     }
 
     parseConntrackEntry(entry) {
