@@ -1,0 +1,9 @@
+[Unit]
+Description=UDP-over-IPv6 Hole Puncher
+
+[Service]
+Type=exec
+ExecStart=/usr/local/bin/udp6-holepuncher
+
+[Install]
+WantedBy=multi-user.target
