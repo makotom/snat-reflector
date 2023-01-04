@@ -70,27 +70,27 @@ class SNATReflector {
     }
 
     buildIPTEntry(event) {
-        const iptDNATRule = this.buildIPTDNATRule(event);
-        const iptForwardRule = this.buildIPTForwardRule(event);
+        const natRule = this.buildIPTNATRule(event);
+        const filterRule = this.buildIPTFilterRule(event);
 
         return [
             '*nat',
-            iptDNATRule,
+            natRule,
             'COMMIT',
             '',
             '*filter',
-            iptForwardRule,
+            filterRule,
             'COMMIT',
             ''
         ].join('\n');
     }
 
-    buildIPTDNATRule(event) {
-        return `${this.chooseIPTCommand(event)} PREROUTING -d ${event.mapped.addr}/32 -p udp -m udp --dport ${event.mapped.port} -j DNAT --to-destination ${event.origin.addr}:${event.origin.port}`;
+    buildIPTNATRule(event) {
+        return `${this.chooseIPTCommand(event)} UDP_HOLE_PUNCHING -d ${event.mapped.addr}/32 -p udp -m udp --dport ${event.mapped.port} -j DNAT --to-destination ${event.origin.addr}:${event.origin.port}`;
     }
 
-    buildIPTForwardRule(event) {
-        return `${this.chooseIPTCommand(event)} FORWARD -d ${event.origin.addr}/32 -p udp -m udp --dport ${event.origin.port} -j ACCEPT`;
+    buildIPTFilterRule(event) {
+        return `${this.chooseIPTCommand(event)} UDP_HOLE_PUNCHING -d ${event.origin.addr}/32 -p udp -m udp --dport ${event.origin.port} -j ACCEPT`;
     }
 
     chooseIPTCommand(event) {

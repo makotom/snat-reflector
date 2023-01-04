@@ -95,18 +95,18 @@ class UDP6HolePuncher {
     }
 
     buildIP6TEntry(event) {
-        const ip6tForwardRule = this.buildIP6TForwardRule(event);
+        const rule = this.buildIP6TFilterRule(event);
 
         return [
             '*filter',
-            ip6tForwardRule,
+            rule,
             'COMMIT',
             ''
         ].join('\n');
     }
 
-    buildIP6TForwardRule(event) {
-        return `${this.chooseIP6TCommand(event)} FORWARD -d ${event.addr}/128 -p udp -m udp --dport ${event.port} -j ACCEPT`;
+    buildIP6TFilterRule(event) {
+        return `${this.chooseIP6TCommand(event)} UDP_HOLE_PUNCHING -d ${event.addr}/128 -p udp -m udp --dport ${event.port} -j ACCEPT`;
     }
 
     chooseIP6TCommand(event) {
