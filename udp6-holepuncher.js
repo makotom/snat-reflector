@@ -50,19 +50,30 @@ class UDP6HolePuncher {
 
     conntrackNewEventCB(event) {
         const ip6tEntry = this.buildIP6TEntry(event);
+        const connKey = this.genConnKeyFromEvent(event);
+        const connCtr = this.conns.get(connKey) || 0;
 
-        this.ip6t_r.stdin.write(ip6tEntry);
-        this.conns.set(JSON.stringify({ addr: event.addr, port: event.port }), true);
+        if (connCtr === 0) {
+            this.ip6t_r.stdin.write(ip6tEntry);
+        }
+
+        this.conns.set(connKey, connCtr + 1);
     }
 
     conntrackDestroyEventCB(event) {
-        const connKey = JSON.stringify({ addr: event.addr, port: event.port });
+        const connKey = this.genConnKeyFromEvent(event);
+        const connCtr = this.conns.get(connKey);
 
-        if (this.conns.has(connKey)) {
+        if (connCtr > 0) {
             const ip6tEntry = this.buildIP6TEntry(event);
 
             this.ip6t_r.stdin.write(ip6tEntry);
-            this.conns.delete(connKey);
+
+            if (connCtr > 1) {
+                this.conns.set(connKey, connCtr - 1);
+            } else {
+                this.conns.delete(connKey);
+            }
         }
     }
 
@@ -92,6 +103,10 @@ class UDP6HolePuncher {
         });
 
         return ret;
+    }
+
+    genConnKeyFromEvent(event) {
+        return JSON.stringify({ addr: event.addr, port: event.port });
     }
 
     buildIP6TEntry(event) {
