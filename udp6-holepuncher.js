@@ -14,6 +14,8 @@ class UDP6HolePuncher {
 
         this.ip6t_r.on('exit', this.armIp6tablesRestore.bind(this));
         this.ip6t_r.stdin.on('error', (err) => console.error(err));
+        this.ip6t_r.stdout.on('data', (data) => console.log(data.toString()));
+        this.ip6t_r.stderr.on('data', (data) => console.error(data.toString()));
     }
 
     armConntrack() {

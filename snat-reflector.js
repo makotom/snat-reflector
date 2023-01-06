@@ -14,6 +14,8 @@ class SNATReflector {
 
         this.ipt_r.on('exit', this.armIptablesRestore.bind(this));
         this.ipt_r.stdin.on('error', (err) => console.error(err));
+        this.ipt_r.stdout.on('data', (data) => console.log(data.toString()));
+        this.ipt_r.stderr.on('data', (data) => console.error(data.toString()));
     }
 
     armConntrack() {
