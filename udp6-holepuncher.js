@@ -66,16 +66,13 @@ class UDP6HolePuncher {
         const connKey = this.genConnKeyFromEvent(event);
         const connCtr = this.conns.get(connKey);
 
-        if (connCtr > 0) {
+        if (connCtr === 1) {
             const ip6tEntry = this.buildIP6TEntry(event);
 
             this.ip6t_r.stdin.write(ip6tEntry);
-
-            if (connCtr > 1) {
-                this.conns.set(connKey, connCtr - 1);
-            } else {
-                this.conns.delete(connKey);
-            }
+            this.conns.delete(connKey);
+        } else {
+            this.conns.set(connKey, connCtr - 1);
         }
     }
 
